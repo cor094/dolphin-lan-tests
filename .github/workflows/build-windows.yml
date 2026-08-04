@@ -1,0 +1,48 @@
+name: Build Dolphin 2606 Triforce Test
+
+on:
+  workflow_dispatch:
+  push:
+
+permissions:
+  contents: read
+
+jobs:
+  windows-x64:
+    runs-on: windows-2022
+
+    steps:
+      - name: Check out source and submodules
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+          fetch-depth: 0
+
+      - name: Add MSBuild to PATH
+        uses: microsoft/setup-msbuild@v2
+
+      - name: Build Dolphin Release x64
+        shell: pwsh
+        run: |
+          msbuild Source/dolphin-emu.sln `
+            /m `
+            /t:Dolphin `
+            /p:Configuration=Release `
+            /p:Platform=x64 `
+            /p:RunCodeAnalysis=false
+
+      - name: Verify and mark portable
+        shell: pwsh
+        run: |
+          if (-not (Test-Path "Binary\x64\Dolphin.exe")) {
+            throw "Binary\x64\Dolphin.exe was not produced."
+          }
+          New-Item -ItemType File -Force -Path "Binary\x64\portable.txt" | Out-Null
+
+      - name: Upload complete portable build
+        uses: actions/upload-artifact@v4
+        with:
+          name: Dolphin-2606-Triforce-Windows-x64-${{ github.sha }}
+          path: Binary/x64/
+          if-no-files-found: error
+          retention-days: 14
