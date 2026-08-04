@@ -286,6 +286,7 @@ static SOCKET GetHostSocket(GuestSocket x)
   return INVALID_SOCKET;
 }
 
+#if !defined(_WIN32)
 static GuestSocket GetGuestSocket(SOCKET x)
 {
   const auto it = std::find(std::begin(s_sockets) + FIRST_VALID_FD, std::end(s_sockets), x);
@@ -298,6 +299,7 @@ static GuestSocket GetGuestSocket(SOCKET x)
 
   return GuestSocket(it - std::begin(s_sockets));
 }
+#endif
 
 static std::string_view GetSafeString(u32 offset, u32 max_length)
 {
